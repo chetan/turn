@@ -7,6 +7,7 @@ module Turn
     attr_accessor :raised
     attr_accessor :message
     attr_accessor :backtrace
+    attr_accessor :passed
 
     def initialize(name)
       @name      = name
@@ -16,6 +17,7 @@ module Turn
       @raised    = nil
       @message   = nil
       @backtrace = []
+      @passed    = false
     end
 
     def fail!(assertion)
@@ -44,7 +46,7 @@ module Turn
     def skip?  ; @skip  ; end
 
     # TODO: should this include `or @skip`?
-    def pass?  ; !(@fail or @error) ; end
+    def pass?  ; @passed ; end
 
     def to_s ; name ; end
   end

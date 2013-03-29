@@ -72,31 +72,47 @@ module Turn
 
       filter = @options[:filter] || @turn_config.pattern || /./
 
-      suite.send("#{type}_methods").grep(filter).each do |test|
-        @turn_case.new_test(test)
-      end
-
+      test_methods = suite.send("#{type}_methods").grep(filter)
       turn_reporter.start_case(@turn_case)
 
       header = "#{type}_suite_header"
       puts send(header, suite) if respond_to? header
 
-      assertions = @turn_case.tests.map do |test|
-        @turn_test = test
-        turn_reporter.start_test(@turn_test)
+      assertions = []
+      turn_methods = []
 
-        inst = suite.new(test.name) #method
+      ret = test_methods.map do |method|
+        # when running w/ parallel tests this block will be in a thread
+
+        test_method = @turn_case.new_test(method)
+        turn_methods << test_method
+
+        inst = suite.new(method)
         inst._assertions = 0
 
         result = inst.run self
 
         if result == "."
-          turn_reporter.pass
+          test_method.passed = true
         end
 
-        turn_reporter.finish_test(@turn_test)
+        assertions << inst._assertions
+      end
 
-        inst._assertions
+      # do all reporting at the end
+      # TODO: timings are busted
+      turn_methods.each do |test|
+        turn_reporter.start_test(test)
+        if test.fail? then
+          turn_reporter.fail(test.raised)
+        elsif test.error? then
+          turn_reporter.error(test.raised)
+        elsif test.skip? then
+          turn_reporter.skip(test.raised)
+        elsif test.passed then
+          turn_reporter.pass
+        end
+        turn_reporter.finish_test(test)
       end
 
       @turn_case.count_assertions = assertions.inject(0) { |sum, n| sum + n }
@@ -110,14 +126,11 @@ module Turn
     def puke(klass, meth, err)
       case err
       when MiniTest::Skip
-        @turn_test.skip!(err)
-        turn_reporter.skip(err)
+        @turn_case.test_by_name(meth).skip!(err)
       when MiniTest::Assertion
-        @turn_test.fail!(err)
-        turn_reporter.fail(err)
+        @turn_case.test_by_name(meth).fail!(err)
       else
-        @turn_test.error!(err)
-        turn_reporter.error(err)
+        @turn_case.test_by_name(meth).error!(err)
       end
       super(klass, meth, err)
     end

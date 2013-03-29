@@ -7,9 +7,6 @@ module Turn
     # Name of test case.
     attr_accessor :name
 
-    # Test methods.
-    attr_accessor :tests
-
     # Some runners marshal tests per file.
     attr_accessor :files
 
@@ -32,7 +29,7 @@ module Turn
     def initialize(name, *files)
       @name  = name
       @files = (files.empty? ? [name] : files)
-      @tests = []
+      @tests = {}
 
       @message = nil
       @count_assertions = 0
@@ -46,7 +43,7 @@ module Turn
 
     def new_test(name)
       c = TestMethod.new(name)
-      @tests << c
+      @tests[name] = c
       c
     end
 
@@ -103,6 +100,19 @@ module Turn
     def each(&block)
       tests.each(&block)
     end
+
+    def tests
+      @tests.values
+    end
+
+    def tests=(val)
+      @tests = val
+    end
+
+    def test_by_name(name)
+      @tests[name]
+    end
+
   end
 
 end
