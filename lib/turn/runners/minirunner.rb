@@ -72,20 +72,23 @@ module Turn
 
       filter = @options[:filter] || @turn_config.pattern || /./
 
-      test_methods = suite.send("#{type}_methods").grep(filter)
+      turn_methods = []
+
+      # loop through once to create Turn::TestCase's
+      suite.send("#{type}_methods").grep(filter).each do |method|
+        turn_methods << @turn_case.new_test(method)
+      end
+
       turn_reporter.start_case(@turn_case)
 
       header = "#{type}_suite_header"
       puts send(header, suite) if respond_to? header
 
       assertions = []
-      turn_methods = []
-
-      ret = test_methods.map do |method|
+      suite.send("#{type}_methods").grep(filter).map do |method|
         # when running w/ parallel tests this block will be in a thread
 
-        test_method = @turn_case.new_test(method)
-        turn_methods << test_method
+        test_method = @turn_case.test_by_name(method)
 
         inst = suite.new(method)
         inst._assertions = 0
