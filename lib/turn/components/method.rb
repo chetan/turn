@@ -8,6 +8,7 @@ module Turn
     attr_accessor :message
     attr_accessor :backtrace
     attr_accessor :passed
+    attr_accessor :assertions
 
     def initialize(name)
       @name      = name
@@ -18,6 +19,7 @@ module Turn
       @message   = nil
       @backtrace = []
       @passed    = false
+      @assertions = 0
     end
 
     def fail!(assertion)

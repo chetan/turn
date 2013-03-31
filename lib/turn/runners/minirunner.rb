@@ -72,11 +72,9 @@ module Turn
 
       filter = @options[:filter] || @turn_config.pattern || /./
 
-      turn_methods = []
-
       # loop through once to create Turn::TestCase's
-      suite.send("#{type}_methods").grep(filter).each do |method|
-        turn_methods << @turn_case.new_test(method)
+      turn_methods = suite.send("#{type}_methods").grep(filter).map{ |m| m }.map do |method|
+        @turn_case.new_test(method)
       end
 
       turn_reporter.start_case(@turn_case)
@@ -84,8 +82,7 @@ module Turn
       header = "#{type}_suite_header"
       puts send(header, suite) if respond_to? header
 
-      assertions = []
-      suite.send("#{type}_methods").grep(filter).map do |method|
+      results = suite.send("#{type}_methods").grep(filter).map do |method|
         # when running w/ parallel tests this block will be in a thread
 
         test_method = @turn_case.test_by_name(method)
@@ -99,12 +96,13 @@ module Turn
           test_method.passed = true
         end
 
-        assertions << inst._assertions
+        test_method.assertions = inst._assertions
+        test_method
       end
 
       # do all reporting at the end
       # TODO: timings are busted
-      turn_methods.each do |test|
+      results.each do |test|
         turn_reporter.start_test(test)
         if test.fail? then
           turn_reporter.fail(test.raised)
@@ -118,11 +116,13 @@ module Turn
         turn_reporter.finish_test(test)
       end
 
-      @turn_case.count_assertions = assertions.inject(0) { |sum, n| sum + n }
+      total_assertions = 0
+      results.each{ |r| total_assertions += r.assertions }
+      @turn_case.count_assertions = total_assertions
 
       turn_reporter.finish_case(@turn_case)
 
-      return assertions.size, assertions.inject(0) { |sum, n| sum + n }
+      return total_assertions
     end
 
     # Override #puke to update Turn's internals and reporter.
