@@ -41,6 +41,9 @@ module Turn
 
     #
     def start_test(test)
+
+      @last_test = test
+
       #if @file != test.file
       #  @file = test.file
       #  io.puts(test.file)
@@ -174,6 +177,10 @@ module Turn
       io.puts "  pass: %d,  fail: %d,  error: %d, skip: %d" % [passes, failures, errors, skips]
       io.puts "  total: %d tests with %d assertions in %f seconds" % tally
       io.puts bar
+    end
+
+    def ticktock
+      @last_test.runtime || super
     end
 
   end

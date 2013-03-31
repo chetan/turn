@@ -90,7 +90,9 @@ module Turn
         inst = suite.new(method)
         inst._assertions = 0
 
+        start_time = Time.now
         result = inst.run self
+        test_method.runtime = ticktock(start_time)
 
         if result == "."
           test_method.passed = true
@@ -101,7 +103,6 @@ module Turn
       end
 
       # do all reporting at the end
-      # TODO: timings are busted
       results.each do |test|
         turn_reporter.start_test(test)
         if test.fail? then
@@ -136,6 +137,18 @@ module Turn
         @turn_case.test_by_name(meth).error!(err)
       end
       super(klass, meth, err)
+    end
+
+    private
+
+    def ticktock(start_time)
+      t = Time.now - start_time
+      h, t = t.divmod(3600)
+      m, t = t.divmod(60)
+      s = t.truncate
+      f = ((t - s) * 1000).to_i
+
+      "%01d:%02d:%02d.%03d" % [h,m,s,f]
     end
 
   end

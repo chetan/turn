@@ -9,6 +9,7 @@ module Turn
     attr_accessor :backtrace
     attr_accessor :passed
     attr_accessor :assertions
+    attr_accessor :runtime
 
     def initialize(name)
       @name      = name
