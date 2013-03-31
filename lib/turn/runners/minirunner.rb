@@ -102,8 +102,12 @@ module Turn
         test_method
       end
 
+      # fix up the list of tests in test_case
+      fixed_tests = {}
+
       # do all reporting at the end
       results.each do |test|
+        fixed_tests[test.name] = test
         turn_reporter.start_test(test)
         if test.fail? then
           turn_reporter.fail(test.raised)
@@ -116,6 +120,8 @@ module Turn
         end
         turn_reporter.finish_test(test)
       end
+
+      @turn_case.tests = fixed_tests
 
       total_assertions = 0
       results.each{ |r| total_assertions += r.assertions }
