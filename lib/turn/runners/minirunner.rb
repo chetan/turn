@@ -129,7 +129,7 @@ module Turn
 
       turn_reporter.finish_case(@turn_case)
 
-      return total_assertions
+      return results.size, total_assertions
     end
 
     # Override #puke to update Turn's internals and reporter.
